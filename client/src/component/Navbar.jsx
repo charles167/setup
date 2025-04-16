@@ -1,16 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { assets } from '../assets/assets';
 import { useAppContext } from '../context/AppContext';
 
 function Navbar() {
     const [open, setOpen] = React.useState(false);
-    const { user, setUser, setShowUserLogin, navigate } = useAppContext();
+    const {
+        user,
+        setUser,
+        setShowUserLogin,
+        navigate,
+        setSearchQuery,
+        searchQuery,
+        getCartCount
+    } = useAppContext();
 
     const logout = async () => {
         setUser(null);
         navigate('/');
     };
+
+    useEffect(() => {
+        if (searchQuery.length > 0) {
+            navigate("/products");
+        }
+    }, [searchQuery]);
 
     return (
         <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all">
@@ -26,6 +40,7 @@ function Navbar() {
 
                 <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
                     <input
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500"
                         type="text"
                         placeholder="Search products"
@@ -33,9 +48,12 @@ function Navbar() {
                     <img src={assets.search_icon} alt='Search' className='w-4 h-4' />
                 </div>
 
+                {/* Cart Icon for Desktop */}
                 <div onClick={() => navigate("/cart")} className="relative cursor-pointer">
                     <img src={assets.nav_cart_icon} alt='cart' className='w-6 opacity-80' />
-                    <button className="absolute -top-2 -right-3 text-xs text-white bg-indigo-500 w-[18px] h-[18px] rounded-full">3</button>
+                    <button className="absolute -top-2 -right-3 text-xs text-white bg-indigo-500 w-[18px] h-[18px] rounded-full">
+                        {getCartCount()}
+                    </button>
                 </div>
 
                 {!user ? (
@@ -66,17 +84,29 @@ function Navbar() {
                 )}
             </div>
 
+            {/* Cart Icon for Mobile */}
+            <div className="sm:hidden absolute top-4 right-16">
+                <div onClick={() => navigate("/cart")} className="relative cursor-pointer">
+                    <img src={assets.nav_cart_icon} alt='cart' className='w-6 opacity-80' />
+                    <button className="absolute -top-2 -right-3 text-xs text-white bg-indigo-500 w-[18px] h-[18px] rounded-full">
+                        {getCartCount()}
+                    </button>
+                </div>
+            </div>
+
+            {/* Menu Toggle Button for Mobile */}
             <button onClick={() => setOpen(!open)} aria-label="Menu" className="sm:hidden">
                 <img src={assets.menu_icon} alt='menu' />
             </button>
 
             {/* Mobile Menu */}
             {open && (
-                <div className="absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-2 px-5 text-sm md:hidden flex">
+                <div className="absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-2 px-5 text-sm md:hidden flex z-50">
                     <NavLink to="/" onClick={() => setOpen(false)}>Home</NavLink>
                     <NavLink to="/products" onClick={() => setOpen(false)}>All Products</NavLink>
                     {user && <NavLink to="/my-orders" onClick={() => setOpen(false)}>My Orders</NavLink>}
                     <NavLink to="/" onClick={() => setOpen(false)}>Contact</NavLink>
+
                     {!user ? (
                         <button
                             onClick={() => {
