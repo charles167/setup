@@ -18,27 +18,24 @@ function Navbar() {
     } = useAppContext();
 
     const logout = async () => {
-
         try {
-            const {data} = await axios.get('/api/user/logout')
-            if(data.success){
-                toast.success(data.message)
+            const { data } = await axios.get('/api/user/logout');
+            if (data.success) {
+                toast.success(data.message);
                 setUser(null);
                 navigate('/');
-
-            }else{
-                toast.error(data.message)
+            } else {
+                toast.error(data.message);
             }
-            
         } catch (error) {
-            toast.error(error.message)
-            
+            toast.error(error.message);
         }
+    };
 
-
-
-
-     
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            navigate('/products');
+        }
     };
 
     useEffect(() => {
@@ -54,22 +51,26 @@ function Navbar() {
             </NavLink>
 
             {/* Desktop Menu */}
-            <div className="hidden sm:flex items-center gap-8">
+            <div className="hidden sm:flex items-center gap-6">
                 <NavLink to='/'>Home</NavLink>
                 <NavLink to='/products'>All Products</NavLink>
                 <NavLink to='/'>Contact</NavLink>
+                <NavLink to='/seller'>Seller</NavLink>
 
-                <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
+                {/* Search bar (desktop) */}
+                <div className="hidden lg:flex items-center border border-gray-300 rounded-full px-3 gap-2 bg-white transition-all duration-300 focus-within:ring-2 ring-indigo-200 shadow-sm focus-within:shadow-lg">
                     <input
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500"
+                        className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500 text-sm transition-all duration-300 focus:w-64"
                         type="text"
                         placeholder="Search products"
                     />
-                    <img src={assets.search_icon} alt='Search' className='w-4 h-4' />
+                    <button onClick={handleSearch} className="transition-transform duration-200 hover:scale-110">
+                        <img src={assets.search_icon} alt="Search" className="w-4 h-4" />
+                    </button>
                 </div>
 
-                {/* Cart Icon for Desktop */}
+                {/* Cart */}
                 <div onClick={() => navigate("/cart")} className="relative cursor-pointer">
                     <img src={assets.nav_cart_icon} alt='cart' className='w-6 opacity-80' />
                     <button className="absolute -top-2 -right-3 text-xs text-white bg-indigo-500 w-[18px] h-[18px] rounded-full">
@@ -77,17 +78,18 @@ function Navbar() {
                     </button>
                 </div>
 
+                {/* Login/Profile */}
                 {!user ? (
                     <button
                         onClick={() => setShowUserLogin(true)}
-                        className="cursor-pointer px-8 py-2 bg-indigo-500 hover:bg-primary-dull transition text-white rounded-full"
+                        className="cursor-pointer px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition-all duration-300 text-white rounded-full hover:scale-105"
                     >
                         Login
                     </button>
                 ) : (
                     <div className='relative group'>
-                        <img src={assets.profile_icon} className='w-10' alt='profile' />
-                        <ul className='hidden group-hover:block absolute top-10 right-0 bg-white shadow border border-gray-200 py-2.5 w-40 rounded-md text-sm z-40'>
+                        <img src={assets.profile_icon} className='w-10 cursor-pointer' alt='profile' />
+                        <ul className='hidden group-hover:block absolute top-10 right-0 bg-white shadow border border-gray-200 py-2.5 w-40 rounded-md text-sm z-40 transition-all duration-300'>
                             <li
                                 onClick={() => navigate('/my-orders')}
                                 className='p-1.5 pl-3 hover:bg-primary/10 cursor-pointer'
@@ -106,7 +108,7 @@ function Navbar() {
             </div>
 
             {/* Cart Icon for Mobile */}
-            <div className="sm:hidden absolute top-4 right-16">
+            <div className="sm:hidden absolute top-4 right-16 z-50">
                 <div onClick={() => navigate("/cart")} className="relative cursor-pointer">
                     <img src={assets.nav_cart_icon} alt='cart' className='w-6 opacity-80' />
                     <button className="absolute -top-2 -right-3 text-xs text-white bg-indigo-500 w-[18px] h-[18px] rounded-full">
@@ -115,18 +117,44 @@ function Navbar() {
                 </div>
             </div>
 
-            {/* Menu Toggle Button for Mobile */}
-            <button onClick={() => setOpen(!open)} aria-label="Menu" className="sm:hidden">
+            {/* Menu Toggle for Mobile */}
+            <button onClick={() => setOpen(!open)} aria-label="Menu" className="sm:hidden z-50 transition-transform duration-200 hover:scale-110">
                 <img src={assets.menu_icon} alt='menu' />
             </button>
 
-            {/* Mobile Menu */}
+            {/* Overlay for mobile */}
             {open && (
-                <div className="absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-2 px-5 text-sm md:hidden flex z-50">
-                    <NavLink to="/" onClick={() => setOpen(false)}>Home</NavLink>
-                    <NavLink to="/products" onClick={() => setOpen(false)}>All Products</NavLink>
-                    {user && <NavLink to="/my-orders" onClick={() => setOpen(false)}>My Orders</NavLink>}
-                    <NavLink to="/" onClick={() => setOpen(false)}>Contact</NavLink>
+                <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" onClick={() => setOpen(false)}></div>
+            )}
+
+            {/* Mobile Menu */}
+            <div
+                className={`fixed top-0 right-0 h-full w-[75%] max-w-xs bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'} sm:hidden`}
+            >
+                <div className="p-6 flex flex-col gap-4 text-base">
+                    <NavLink to="/" onClick={() => setOpen(false)} className="hover:text-indigo-600 transition">Home</NavLink>
+                    <NavLink to="/products" onClick={() => setOpen(false)} className="hover:text-indigo-600 transition">All Products</NavLink>
+                    {user && (
+                        <NavLink to="/my-orders" onClick={() => setOpen(false)} className="hover:text-indigo-600 transition">My Orders</NavLink>
+                    )}
+                    <NavLink to="/" onClick={() => setOpen(false)} className="hover:text-indigo-600 transition">Contact</NavLink>
+                    <NavLink to="/seller" onClick={() => setOpen(false)} className="hover:text-indigo-600 transition">Seller</NavLink>
+
+                    {/* Mobile search input */}
+                    <div className="flex items-center border border-gray-300 rounded-full px-3 mt-4 gap-2 bg-white transition-all duration-300 focus-within:ring-2 ring-indigo-200 shadow-sm focus-within:shadow-lg">
+                        <input
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="py-1.5 w-full bg-transparent outline-none text-sm transition-all duration-300 focus:w-56"
+                            type="text"
+                            placeholder="Search products"
+                        />
+                        <button onClick={() => {
+                            handleSearch();
+                            setOpen(false);
+                        }} className="transition-transform duration-200 hover:scale-110">
+                            <img src={assets.search_icon} alt="Search" className="w-4 h-4" />
+                        </button>
+                    </div>
 
                     {!user ? (
                         <button
@@ -134,7 +162,7 @@ function Navbar() {
                                 setOpen(false);
                                 setShowUserLogin(true);
                             }}
-                            className="cursor-pointer px-6 py-2 mt-2 bg-indigo-500 hover:bg-primary-dull transition text-white rounded-full text-sm"
+                            className="mt-6 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-center transition-all duration-300 hover:scale-105"
                         >
                             Login
                         </button>
@@ -144,13 +172,13 @@ function Navbar() {
                                 setOpen(false);
                                 logout();
                             }}
-                            className="cursor-pointer px-6 py-2 mt-2 bg-indigo-500 hover:bg-primary-dull transition text-white rounded-full text-sm"
+                            className="mt-6 py-2 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-center transition-all duration-300 hover:scale-105"
                         >
                             Logout
                         </button>
                     )}
                 </div>
-            )}
+            </div>
         </nav>
     );
 }
