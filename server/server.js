@@ -21,7 +21,7 @@ await connectCloudinary()
 await connectDB();
 
 // Allow multiple origins
-const allowedOrigins = ['http://localhost:5173', 'http://your-frontend-url.com'];  // Add any production URLs if needed
+const allowedOrigins = ['http://localhost:5173', 'https://setup-3drw.vercel.app'];  // Add any production URLs if needed
 
 app.post('/stripe', express.raw({type: 'application/json'}),StripeWebhook)
 // Middleware Configuration
