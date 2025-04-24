@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { assets } from '../assets/assets'
+import { useAppContext } from '../context/AppContext'
+import toast from 'react-hot-toast'
 
 // Input Field Component
 const InputField = ({ type, placeholder, name, handleChange, address }) => (
@@ -15,6 +17,7 @@ const InputField = ({ type, placeholder, name, handleChange, address }) => (
 )
 
 const AddAddress = () => {
+  const { axios, user, navigate } = useAppContext()
   const [address, setAddress] = useState({
     firstName: '',
     lastName: '',
@@ -26,19 +29,60 @@ const AddAddress = () => {
     country: '',
     phone: '',
   })
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setAddress(prevAddres => ({
-      ...prevAddres,
+    setAddress(prevAddress => ({
+      ...prevAddress,
       [name]: value,
     }))
   }
 
   const onSubmitHandler = async (e) => {
     e.preventDefault()
-    // handle submit logic here (e.g., send to backend)
-    console.log('Address submitted:', address)
+
+    // Check if user is logged in
+    if (!user || !user._id) {
+      toast.error("User is not logged in")
+      return
+    }
+
+    setLoading(true) // Start loading state
+
+    // Ensure userId is included
+    const addressWithUserId = {
+      ...address,
+      userId: user._id,
+    }
+
+    try {
+      const { data } = await axios.post('/api/address/add', addressWithUserId)
+
+      if (data.success) {
+        toast.success(data.message)
+        setAddress({
+          firstName: '',
+          lastName: '',
+          email: '',
+          street: '',
+          city: '',
+          state: '',
+          zipcode: '',
+          country: '',
+          phone: '',
+        })
+        navigate('/cart')
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false) // Reset loading state
+    }
+
+    console.log('Address submitted:', addressWithUserId)
   }
 
   return (
@@ -48,54 +92,39 @@ const AddAddress = () => {
       </p>
 
       <div className='flex flex-col-reverse md:flex-row justify-between mt-10 gap-10'>
-        <div className='flex-1 max-w-md'>
+        <div className='flex-1 max-w-md md:max-w-xl'>
           <form onSubmit={onSubmitHandler} className='space-y-4 mt-6 text-sm'>
-
             <div className='grid grid-cols-2 gap-4'>
-              <InputField handleChange={handleChange} address={address}
-                name='firstName' type="text" placeholder="First Name" />
-              <InputField handleChange={handleChange} address={address}
-                name='lastName' type="text" placeholder="Last Name" />
+              <InputField handleChange={handleChange} address={address} name='firstName' type="text" placeholder="First Name" />
+              <InputField handleChange={handleChange} address={address} name='lastName' type="text" placeholder="Last Name" />
             </div>
 
-            <InputField handleChange={handleChange} address={address}
-              name='email' type="email" placeholder="Email Address" />
-
-            <InputField handleChange={handleChange} address={address}
-              name='street' type="text" placeholder="Street Address" />
+            <InputField handleChange={handleChange} address={address} name='email' type="email" placeholder="Email Address" />
+            <InputField handleChange={handleChange} address={address} name='street' type="text" placeholder="Street Address" />
 
             <div className='grid grid-cols-2 gap-4'>
-              <InputField handleChange={handleChange} address={address}
-                name='city' type="text" placeholder="City" />
-              <InputField handleChange={handleChange} address={address}
-                name='state' type="text" placeholder="State" />
+              <InputField handleChange={handleChange} address={address} name='city' type="text" placeholder="City" />
+              <InputField handleChange={handleChange} address={address} name='state' type="text" placeholder="State" />
             </div>
 
             <div className='grid grid-cols-2 gap-4'>
-              <InputField handleChange={handleChange} address={address}
-                name='zipcode' type="text" placeholder="Zip Code" />
-              <InputField handleChange={handleChange} address={address}
-                name='country' type="text" placeholder="Country" />
+              <InputField handleChange={handleChange} address={address} name='zipcode' type="text" placeholder="Zip Code" />
+              <InputField handleChange={handleChange} address={address} name='country' type="text" placeholder="Country" />
             </div>
 
-            <InputField handleChange={handleChange} address={address}
-              name='phone' type="tel" placeholder="Phone Number" />
+            <InputField handleChange={handleChange} address={address} name='phone' type="tel" placeholder="Phone Number" />
 
             <button
               type='submit'
-              className='w-full mt-4 py-2 bg-indigo-500 text-white font-medium rounded hover:bg-indigo-600 transition'
+              className={`w-full mt-4 py-2 ${loading ? 'bg-gray-500' : 'bg-indigo-500'} text-white font-medium rounded hover:bg-indigo-600 transition`}
+              disabled={loading}
             >
-              Save Address
+              {loading ? "Saving..." : "Save Address"}
             </button>
-
           </form>
         </div>
 
-        <img
-          className='md:mr-10 md:w-96 max-md:mb-8'
-          src={assets.add_address_iamge}
-          alt="Add Address"
-        />
+        <img className='md:mr-10 md:w-96 max-md:mb-8' src={assets.add_address_iamge} alt="Add Address" />
       </div>
     </div>
   )

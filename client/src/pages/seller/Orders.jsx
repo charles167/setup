@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
-import { assets, dummyOrders } from '../../assets/assets'
+import { assets } from '../../assets/assets'
+import toast from 'react-hot-toast'
 
 const Orders = () => {
-  const { currency } = useAppContext()
+  const { currency, axios } = useAppContext()
   const [orders, setOrders] = useState([])
 
   const fetchOrders = async () => {
-    // Replace with actual fetch if available
-    setOrders(dummyOrders)
+    try {
+      const { data } = await axios.get('/api/order/seller')
+      if (data.success) {
+        setOrders(data.orders)
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      const errorMessage = error?.response?.data?.message || error.message || 'Something went wrong'
+      toast.error(errorMessage)
+    }
   }
 
   useEffect(() => {
@@ -23,9 +33,9 @@ const Orders = () => {
         {orders.length === 0 ? (
           <p className="text-center text-gray-500">No orders found.</p>
         ) : (
-          orders.map((order, index) => (
+          orders.map((order) => (
             <div
-              key={index}
+              key={order._id} // Prefer using a unique identifier from the order
               className="flex flex-col md:items-center md:flex-row gap-5 justify-between p-5 max-w-4xl rounded-md border border-gray-300 text-gray-800"
             >
               <div className="flex gap-5 max-w-80">
@@ -35,27 +45,30 @@ const Orders = () => {
                   alt="box icon"
                 />
                 <div className="flex flex-col gap-1">
-                  {order.items.map((item, i) => (
-                    <p key={i} className="font-medium">
-                      {item.product?.name || 'Unnamed Product'}
-                      <span className="text-primary"> x {item.quantity}</span>
-                    </p>
-                  ))}
+                  {order.items && order.items.length > 0 ? (
+                    order.items.map((item) => (
+                      <p key={item.product?._id || item.product?.name} className="font-medium">
+                        {item.product?.name || 'Unnamed Product'}
+                        <span className="text-primary"> x {item.quantity}</span>
+                      </p>
+                    ))
+                  ) : (
+                    <p>No items in this order</p>
+                  )}
                 </div>
               </div>
 
               <div className="text-sm md:text-base text-black/60">
                 <p className="text-black/80">
-                  {order.address.firstName} {order.address.lastName}
+                  {order.address?.firstName} {order.address?.lastName}
                 </p>
                 <p>
-                  {order.address.street}, {order.address.city}
+                  {order.address?.street}, {order.address?.city}
                 </p>
                 <p>
-                  {order.address.state}, {order.address.zipcode},{' '}
-                  {order.address.country}
+                  {order.address?.state}, {order.address?.zipcode}, {order.address?.country}
                 </p>
-                <p>{order.address.phone}</p>
+                <p>{order.address?.phone}</p>
               </div>
 
               <p className="font-medium text-lg my-auto">
@@ -66,7 +79,7 @@ const Orders = () => {
               <div className="flex flex-col text-sm md:text-base text-black/60">
                 <p>Method: {order.paymentType}</p>
                 <p>Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-                <p>Payment: {order.isPaid ? 'Paid' : 'Pending'}</p>
+                <p>Payment: {order.ispaid ? 'Paid' : 'Pending'}</p>
               </div>
             </div>
           ))
